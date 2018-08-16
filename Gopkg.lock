@@ -2,12 +2,36 @@
 
 
 [[projects]]
-  digest = "1:0a96fe83a376e086d9f6573d655715a5d95b459eac48df1f9fc8392a0edbc0e7"
-  name = "github.com/uber-go/zap"
+  digest = "1:5f60960edc786fde3d2dcd0742ff897327703b8a755b789ae7984cc975e3f5a2"
+  name = "github.com/gobuffalo/packr"
   packages = ["."]
   pruneopts = "UT"
-  revision = "72313cde80537dd4dc9b7b80eda6d7ed796c4232"
-  version = "v1.0.0-rc.1"
+  revision = "4399355520ba52518a972ac16c24f6eb8a1610c1"
+  version = "v1.13.1"
+
+[[projects]]
+  digest = "1:43dd08a10854b2056e615d1b1d22ac94559d822e1f8b6fcc92c1a1057e85188e"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ea4d1f681babbce9545c9c5f3d5194a789c89f5b"
+  version = "v1.2.0"
+
+[[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
+  digest = "1:b24d38b282bacf9791408a080f606370efa3d364e4b5fd9ba0f7b87786d3b679"
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+  version = "v1.20.0"
 
 [[projects]]
   digest = "1:3c1a69cdae3501bf75e76d0d86dc6f2b0a7421bc205c0cb7b96b19eed464a34d"
@@ -18,9 +42,10 @@
   version = "v1.3.2"
 
 [[projects]]
-  digest = "1:80b48bf5e597f3d099f0fdf08f092480842e12189aeab25f84f914990102f7ac"
+  digest = "1:a8393910a5fd67130a7d73c9a696fa6d65ff272142621c6b7a388e523545f242"
   name = "go.uber.org/zap"
   packages = [
+    ".",
     "buffer",
     "internal/bufferpool",
     "internal/exit",
@@ -34,6 +59,12 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/uber-go/zap"]
+  input-imports = [
+    "github.com/gobuffalo/packr",
+    "github.com/gorilla/websocket",
+    "github.com/urfave/cli",
+    "go.uber.org/zap",
+    "go.uber.org/zap/zapcore",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

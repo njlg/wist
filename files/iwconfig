@@ -1,0 +1,9 @@
+wlan1     IEEE 802.11  ESSID:"Astronomican"
+          Mode:Managed  Frequency:2.437 GHz  Access Point: 88:D7:F6:45:CF:2A
+          Bit Rate=21.7 Mb/s   Tx-Power=30 dBm
+          Retry short  long limit:2   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:off
+          Link Quality=70/70  Signal level=-17 dBm
+          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+          Tx excessive retries:5869  Invalid misc:882   Missed beacon:0

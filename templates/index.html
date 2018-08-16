@@ -1,0 +1,210 @@
+<html>
+<head>
+	<title>wist &mdash; Wifi Status</title>
+	<script src="/Chart.bundle.js"></script>
+	<script src="/lodash.core.min.js"></script>
+	<style>
+		.row { display: flex; }
+		.canvas { position: relative; width:25vw; }
+		table { width: 100%; border-collapse: collapse; }
+		table td, table th { margin: 0; text-align: center; }
+		table th { text-decoration: underline; }
+		p { margin-bottom: 0; }
+		p + p { margin-top: 0; }
+	</style>
+</head>
+<body>
+	<h1>Wifi Status</h1>
+	<h2>{{.IWConfig.SSID}} ({{.IWConfig.Frequency}})</h2>
+	<div class="row">
+		<div class="canvas">
+			<canvas id="signalCanvas"></canvas>
+		</div>
+		<div class="canvas">
+			<canvas id="levelCanvas"></canvas>
+		</div>
+		<div class="canvas">
+			<canvas id="noiseCanvas"></canvas>
+		</div>
+		<div class="canvas">
+			<canvas id="bitRate"></canvas>
+		</div>
+	</div>
+	<div class="row">
+	</div>
+	<div class="row">
+		<div class="canvas">
+			<h2>Discarded Packets</h2>
+			<p>nwid: <span id="nwid">{{.PacketNWID}}</span></p>
+			<p>crypt: <span id="crypt">{{.PacketCrypt}}</span></p>
+			<p>frag: <span id="frag">{{.PacketFrag}}</span></p>
+			<p>retry: <span id="retry">{{.PacketRetry}}</span></p>
+			<p>misc: <span id="misc">{{.PacketMisc}}</span></p>
+		</div>
+		<div class="canvas">
+			<h2>Connected Devices</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Mac</th>
+						<th>IP</th>
+						<th>Name</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .Clients}}
+					<tr>
+						<td>{{.Mac}}</td>
+						<td>{{.IP}}</td>
+						<td>{{.Name}}</td>
+					</tr>
+					{{end}}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<script>
+	<!--
+		var signalConfig = {
+			type: 'line',
+			data: {
+				datasets: [{
+					backgroundColor: 'rgb(255, 99, 132)',
+					borderColor: 'rgb(255, 99, 132)',
+					data: {{.Signal}},
+					fill: false,
+				}]
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Signal Strength'
+				},
+				legend: {
+					display: false,
+				}
+			}
+		};
+		var levelConfig = {
+			type: 'line',
+			data: {
+				datasets: [{
+					backgroundColor: 'rgb(54, 162, 235)',
+					borderColor: 'rgb(54, 162, 235)',
+					data: {{.Level}},
+					fill: false,
+				}]
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Signal Level'
+				},
+				legend: {
+					display: false,
+				}
+			}
+		};
+		var noiseConfig = {
+			type: 'line',
+			data: {
+				datasets: [{
+					backgroundColor: 'rgb(75, 192, 192)',
+					borderColor: 'rgb(75, 192, 192)',
+					data: {{.Noise}},
+					fill: false,
+				}]
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Signal Noise'
+				},
+				legend: {
+					display: false,
+				}
+			}
+		};
+		var bitRateConfig = {
+			type: 'line',
+			data: {
+				datasets: [{
+					backgroundColor: 'rgb(255, 159, 64)',
+					borderColor: 'rgb(255, 159, 64)',
+					data: {{.BitRate}},
+					fill: false,
+				}]
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Bit Rate (MB/s)'
+				},
+				legend: {
+					display: false,
+				}
+			}
+		};
+
+		window.onload = function() {
+			var ctx1 = document.getElementById('signalCanvas').getContext('2d');
+			window.signal = new Chart(ctx1, signalConfig);
+
+			var ctx2 = document.getElementById('levelCanvas').getContext('2d');
+			window.level = new Chart(ctx2, levelConfig);
+
+			var ctx3 = document.getElementById('noiseCanvas').getContext('2d');
+			window.noise = new Chart(ctx3, noiseConfig);
+
+			var ctx4 = document.getElementById('bitRate').getContext('2d');
+			window.bitrate = new Chart(ctx4, bitRateConfig);
+		};
+
+		var conn = new WebSocket("ws://{{.Host}}/data");
+		conn.onmessage = function(evt) {
+			console.log('more data', evt.data);
+
+			var json = JSON.parse(evt.data);
+			console.log('json data', json);
+
+			if(json && json.signal) {
+				signalConfig.data.datasets[0].data = json.signal;
+			}
+			if(json && json.level) {
+				levelConfig.data.datasets[0].data = json.level;
+			}
+			if(json && json.noise) {
+				noiseConfig.data.datasets[0].data = json.noise;
+			}
+			if(json && json.bitrate) {
+				bitRateConfig.data.datasets[0].data = json.bitrate;
+			}
+			if(json && json.nwid) {
+				document.getElementById("nwid").innerText = json.nwid;
+			}
+			if(json && json.crypt) {
+				document.getElementById("crypt").innerText = json.crypt;
+			}
+			if(json && json.frag) {
+				document.getElementById("frag").innerText = json.frag;
+			}
+			if(json && json.retry) {
+				document.getElementById("retry").innerText = json.retry;
+			}
+			if(json && json.misc) {
+				document.getElementById("misc").innerText = json.misc;
+			}
+
+			window.signal.update();
+			window.level.update();
+			window.noise.update();
+			window.bitrate.update();
+		}
+		//-->
+	</script>
+</body>
+</html>
