@@ -1,9 +1,9 @@
 package runner
 
 import (
-	"os/exec"
 	"strings"
 	"time"
+	"io/ioutil"
 
 	"go.uber.org/zap"
 
@@ -25,7 +25,7 @@ func getDNSLease() string {
 		path = "/Users/nlevingreenhaw/go/src/wist/files/var/lib/misc/dnsmasq.leases"
 	}
 
-	out, err := exec.Command("cat", path).Output()
+	out, err := ioutil.ReadFile(path)
 
 	if err != nil {
 		log.Error("Could not read file", zap.Error(err))

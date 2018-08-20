@@ -27,7 +27,14 @@ func (m *Metric) Add(val float64) {
 
 	// if the list is at capacity, drop head
 	if len(m.list) >= cap(m.list) {
-		m.list = m.list[1:]
+		tail := make([]float64, len(m.list))
+
+		copy(tail, m.list[1:])
+
+		tail[cap(tail) - 1] = val
+
+		m.list = tail
+		return
 	}
 
 	m.list = append(m.list, val)
@@ -39,7 +46,7 @@ func init() {
 
 	data = make(map[string]*Metric, 20)
 
-	size := 120
+	size := 40
 	data["link.quality"] = New(size)
 	data["link.level"] = New(size)
 	data["link.noise"] = New(size)
@@ -50,6 +57,9 @@ func init() {
 	data["discard_packets.misc"] = New(size)
 
 	data["bitrate"] = New(size)
+
+	data["cpu"] = New(size)
+	data["mem"] = New(size)
 }
 
 // Add ...

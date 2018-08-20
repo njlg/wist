@@ -41,11 +41,14 @@ type page struct {
 	Clients []runner.Client
 
 	IWConfig runner.Config
+
+	CPU string
+	Memory string
 }
 
 // data struct is for websocket response
 type data struct {
-	Signal []float64 `json:"signal,omitempty"`
+	Signal float64 `json:"signal,omitempty"`
 	Level []float64 `json:"level,omitempty"`
 	Noise []float64 `json:"noise,omitempty"`
 
@@ -56,6 +59,11 @@ type data struct {
 	Misc float64 `json:"misc,omitempty"`
 
 	BitRate []float64 `json:"bitrate,omitempty"`
+
+	Clients []runner.Client `json:"clients,omitempty"`
+
+	CPU []float64 `json:"cpu,omitempty"`
+	Memory []float64 `json:"memory,omitempty"`
 }
 
 // Run ...
@@ -65,7 +73,7 @@ func Run(ctx *cli.Context) error {
 	// prepare http bind address
 	port := ctx.String("port")
 	addr := strings.Builder{}
-	addr.WriteString("localhost:")
+	addr.WriteString("0.0.0.0:")
 	addr.WriteString(port)
 
 	server := &http.Server{
@@ -88,11 +96,14 @@ func Run(ctx *cli.Context) error {
 		}
 
 		// signal info
-		signalQualityMetric, _ := metrics.GetAll("link.quality")
+		signalQualityMetric, _ := metrics.Get("link.quality")
 		signalLevelMetric, _ := metrics.GetAll("link.level")
 		signalNoiseMetric, _ := metrics.GetAll("link.noise")
 
 		bitRate, _ := metrics.GetAll("bitrate")
+
+		cpu, _ := metrics.GetAll("cpu")
+		mem, _ := metrics.GetAll("mem")
 
 		// packet info
 		packetNWID, _ := metrics.Get("discard_packets.nwid")
@@ -104,7 +115,7 @@ func Run(ctx *cli.Context) error {
 
 		data := page{
 			Host:   r.Host,
-			Signal: makeJSArray(signalQualityMetric),
+			Signal: fmt.Sprintf("%f", signalQualityMetric),
 			Level: makeJSArray(signalLevelMetric),
 			Noise: makeJSArray(signalNoiseMetric),
 			BitRate: makeJSArray(bitRate),
@@ -117,6 +128,9 @@ func Run(ctx *cli.Context) error {
 
 			Clients: runner.Clients,
 			IWConfig: runner.IWConfig,
+
+			CPU: makeJSArray(cpu),
+			Memory: makeJSArray(mem),
 		}
 		tmpl.Execute(w, data)
 	}))
@@ -133,12 +147,16 @@ func Run(ctx *cli.Context) error {
 
 		for _ = range time.Tick(time.Second * 5) {
 			// signal info
-			linkQuality, _ := metrics.GetAll("link.quality")
+			linkQuality, _ := metrics.Get("link.quality")
 			linkLevel, _ := metrics.GetAll("link.level")
 			linkNoise, _ := metrics.GetAll("link.noise")
 
 			// bit rate
 			bitRate, _ := metrics.GetAll("bitrate")
+
+			// cpu & memory
+			cpu, _ := metrics.GetAll("cpu")
+			mem, _ := metrics.GetAll("mem")
 
 			// packet info
 			packetNWID, _ := metrics.Get("discard_packets.nwid")
@@ -151,12 +169,19 @@ func Run(ctx *cli.Context) error {
 				Signal: linkQuality,
 				Level: linkLevel,
 				Noise: linkNoise,
+
+				BitRate: bitRate,
+
 				NWID: packetNWID,
 				Crypt: packetCrypt,
 				Frag: packetFrag,
 				Retry: packetRetry,
 				Misc: packetMisc,
-				BitRate: bitRate,
+
+				Clients: runner.Clients,
+
+				CPU: cpu,
+				Memory: mem,
 			}
 
 			message, err := json.Marshal(d)

@@ -1,39 +1,43 @@
 <html>
 <head>
 	<title>wist &mdash; Wifi Status</title>
-	<script src="/Chart.bundle.js"></script>
-	<script src="/lodash.core.min.js"></script>
+    <script src="/highcharts.js"></script>
+    <script src="/highcharts-more.js"></script>
+    <script src="/highcharts-solid-gauge.js"></script>
+	<script src="/lodash.min.js"></script>
 	<style>
 		.row { display: flex; }
-		.canvas { position: relative; width:25vw; }
+		.cell { position: relative; width:25vw; }
 		table { width: 100%; border-collapse: collapse; }
 		table td, table th { margin: 0; text-align: center; }
 		table th { text-decoration: underline; }
 		p { margin-bottom: 0; }
 		p + p { margin-top: 0; }
+        .sp { display: flex; align-items: center; }
+        .sp div { flex: 1; }
 	</style>
 </head>
 <body>
 	<h1>Wifi Status</h1>
 	<h2>{{.IWConfig.SSID}} ({{.IWConfig.Frequency}})</h2>
 	<div class="row">
-		<div class="canvas">
-			<canvas id="signalCanvas"></canvas>
+		<div class="cell">
+			<div id="container-signal"></div>
 		</div>
-		<div class="canvas">
-			<canvas id="levelCanvas"></canvas>
+		<div class="cell">
+            <div id="container-level"></div>
 		</div>
-		<div class="canvas">
-			<canvas id="noiseCanvas"></canvas>
+		<div class="cell">
+            <div id="container-noise"></div>
 		</div>
-		<div class="canvas">
-			<canvas id="bitRate"></canvas>
+		<div class="cell">
+            <div id="container-bitrate"></div>
 		</div>
 	</div>
 	<div class="row">
 	</div>
 	<div class="row">
-		<div class="canvas">
+		<div class="cell">
 			<h2>Discarded Packets</h2>
 			<p>nwid: <span id="nwid">{{.PacketNWID}}</span></p>
 			<p>crypt: <span id="crypt">{{.PacketCrypt}}</span></p>
@@ -41,7 +45,7 @@
 			<p>retry: <span id="retry">{{.PacketRetry}}</span></p>
 			<p>misc: <span id="misc">{{.PacketMisc}}</span></p>
 		</div>
-		<div class="canvas">
+		<div class="cell">
 			<h2>Connected Devices</h2>
 			<table>
 				<thead>
@@ -51,7 +55,7 @@
 						<th>Name</th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody id="clients">
 					{{range .Clients}}
 					<tr>
 						<td>{{.Mac}}</td>
@@ -62,127 +66,276 @@
 				</tbody>
 			</table>
 		</div>
+        <div class="cell">
+		</div>
+		<div class="cell sp">
+            <div id="container-cpu"></div>
+            <div id="container-mem"></div>
+		</div>
 	</div>
 	<script>
 	<!--
-		var signalConfig = {
-			type: 'line',
-			data: {
-				datasets: [{
-					backgroundColor: 'rgb(255, 99, 132)',
-					borderColor: 'rgb(255, 99, 132)',
-					data: {{.Signal}},
-					fill: false,
-				}]
+		var gaugeOptions = {
+			chart: {
+				type: 'solidgauge'
 			},
-			options: {
-				responsive: true,
+			title: null,
+            credits: {
+                enabled: false
+            },
+			pane: {
+				center: ['50%', '50%'],
+				size: '100%',
+				startAngle: -90,
+				endAngle: 90,
+				background: {
+					backgroundColor: '#f7f7f7',
+					innerRadius: '60%',
+					outerRadius: '100%',
+					shape: 'arc'
+				}
+			},
+			tooltip: {
+				enabled: false
+			},
+			yAxis: {
+				stops: [
+					[0.3, '#DF5353'], // green
+					[0.5, '#DDDF0D'], // yellow
+					[0.9, '#55BF3B'] // red
+				],
+				lineWidth: 0,
+				minorTickInterval: null,
+				tickAmount: 2,
 				title: {
-					display: true,
-					text: 'Signal Strength'
+					y: 10
 				},
-				legend: {
-					display: false,
+				labels: {
+					y: 16
+				}
+			},
+			plotOptions: {
+				solidgauge: {
+					dataLabels: {
+						y: 5,
+						borderWidth: 0,
+						useHTML: true
+					}
 				}
 			}
 		};
-		var levelConfig = {
-			type: 'line',
-			data: {
-				datasets: [{
-					backgroundColor: 'rgb(54, 162, 235)',
-					borderColor: 'rgb(54, 162, 235)',
-					data: {{.Level}},
-					fill: false,
-				}]
-			},
-			options: {
-				responsive: true,
-				title: {
-					display: true,
-					text: 'Signal Level'
-				},
-				legend: {
-					display: false,
+
+		var lineOptions = {
+            chart: {
+                type: 'spline',
+                zoomType: 'x'
+            },
+            tooltip: {
+                style: 'display:hidden',
+                enabled: false
+            },
+            yAxis: {
+                allowDecimals: false,
+                title: {
+                    text: null
+                }
+            },
+            xAxis: {
+                labels: {
+					enabled: false
 				}
-			}
-		};
-		var noiseConfig = {
-			type: 'line',
-			data: {
-				datasets: [{
-					backgroundColor: 'rgb(75, 192, 192)',
-					borderColor: 'rgb(75, 192, 192)',
-					data: {{.Noise}},
-					fill: false,
-				}]
-			},
-			options: {
-				responsive: true,
-				title: {
-					display: true,
-					text: 'Signal Noise'
-				},
-				legend: {
-					display: false,
-				}
-			}
-		};
-		var bitRateConfig = {
-			type: 'line',
-			data: {
-				datasets: [{
-					backgroundColor: 'rgb(255, 159, 64)',
-					borderColor: 'rgb(255, 159, 64)',
-					data: {{.BitRate}},
-					fill: false,
-				}]
-			},
-			options: {
-				responsive: true,
-				title: {
-					display: true,
-					text: 'Bit Rate (MB/s)'
-				},
-				legend: {
-					display: false,
-				}
-			}
-		};
+            },
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                spline: {
+                    marker: {
+                        enabled: false
+                    },
+                    states: {
+                        hover: {
+                            enabled: false
+                        }
+					}
+                }
+            }
+        };
+
+		var sparkOptions = {
+            chart: {
+                backgroundColor: null,
+                borderWidth: 0,
+                type: 'area',
+                margin: [2, 0, 2, 0],
+                width: 120,
+                height: 20,
+                style: {
+                    overflow: 'visible'
+                },
+
+                // small optimalization, saves 1-2 ms each sparkline
+                skipClone: true
+            },
+            title: {
+                text: ''
+            },
+            credits: {
+                enabled: false
+            },
+            xAxis: {
+                labels: {
+                    enabled: false
+                },
+                title: {
+                    text: null
+                },
+                startOnTick: false,
+                endOnTick: false,
+                tickPositions: []
+            },
+            yAxis: {
+                endOnTick: false,
+                startOnTick: false,
+                labels: {
+                    enabled: false
+                },
+                title: {
+                    text: null
+                },
+                tickPositions: [0]
+            },
+            legend: {
+                enabled: false
+            },
+            tooltip: {
+                enabled: false
+            },
+            plotOptions: {
+                series: {
+                    animation: false,
+                    lineWidth: 1,
+                    shadow: false,
+                    states: {
+                        hover: {
+                            enabled: false
+                        }
+                    },
+                    marker: {
+						enabled: false
+                    },
+                    fillOpacity: 0.25
+                },
+                column: {
+                    negativeColor: '#910000',
+                    borderColor: 'silver'
+                }
+            }
+        };
 
 		window.onload = function() {
-			var ctx1 = document.getElementById('signalCanvas').getContext('2d');
-			window.signal = new Chart(ctx1, signalConfig);
+            window.chartSignal = Highcharts.chart('container-signal', Highcharts.merge(gaugeOptions, {
+                yAxis: {
+                    min: 0,
+                    max: 70,
+                    title: {
+                        text: 'Signal Strength'
+                    }
+                },
+                series: [{
+                    name: 'Signal Strength',
+                    data: [{{.Signal}}],
+                    dataLabels: {
+                        format: '<div style="text-align:center"><span style="font-size:25px;color:black">{y}</span></div>'
+                    },
+                }]
+            }));
 
-			var ctx2 = document.getElementById('levelCanvas').getContext('2d');
-			window.level = new Chart(ctx2, levelConfig);
+            window.chartLevel = Highcharts.chart('container-level', Highcharts.merge(lineOptions, {
+                title: {
+                    text: 'Signal Level'
+                },
+                series: [{
+                    name: 'Level',
+                    data: {{.Level}}
+                }]
+            }));
 
-			var ctx3 = document.getElementById('noiseCanvas').getContext('2d');
-			window.noise = new Chart(ctx3, noiseConfig);
+            window.chartNoise = Highcharts.chart('container-noise', Highcharts.merge(lineOptions, {
+                title: {
+                    text: 'Signal Noise'
+                },
+                series: [{
+                    name: 'Noise',
+                    data: {{.Noise}}
+                }]
+            }));
 
-			var ctx4 = document.getElementById('bitRate').getContext('2d');
-			window.bitrate = new Chart(ctx4, bitRateConfig);
+            window.chartBitRate = Highcharts.chart('container-bitrate', Highcharts.merge(lineOptions, {
+                title: {
+                    text: 'Bit Rate'
+                },
+                subtitle: {
+                    text: 'mb/s'
+                },
+                series: [{
+                    name: 'Bit Rate',
+                    data: {{.BitRate}}
+                }]
+            }));
+
+            var cpuPercent = _.round(_.last({{.CPU}}), 2)
+            var memPercent = _.round(_.last({{.Memory}}), 2)
+            window.chartCpu = Highcharts.chart('container-cpu', Highcharts.merge(sparkOptions, {
+                title: {
+                    text: 'CPU'
+                },
+                subtitle: {
+                    text: cpuPercent + '%'
+                },
+                series: [{
+                    name: 'CPU',
+                    data: {{.CPU}}
+                }]
+            }));
+
+            window.chartMemory = Highcharts.chart('container-mem', Highcharts.merge(sparkOptions, {
+                title: {
+                    text: 'Memory'
+                },
+                subtitle: {
+                    text: memPercent + '%'
+                },
+                series: [{
+                    name: 'Memory',
+                    data: {{.Memory}}
+                }]
+            }));
 		};
 
 		var conn = new WebSocket("ws://{{.Host}}/data");
 		conn.onmessage = function(evt) {
-			console.log('more data', evt.data);
-
 			var json = JSON.parse(evt.data);
 			console.log('json data', json);
 
 			if(json && json.signal) {
-				signalConfig.data.datasets[0].data = json.signal;
+                var point = window.chartSignal.series[0].points[0];
+                point.update(json.signal);
 			}
+
 			if(json && json.level) {
-				levelConfig.data.datasets[0].data = json.level;
+                window.chartLevel.series[0].setData(json.level);
 			}
 			if(json && json.noise) {
-				noiseConfig.data.datasets[0].data = json.noise;
+                window.chartNoise.series[0].setData(json.noise);
 			}
 			if(json && json.bitrate) {
-				bitRateConfig.data.datasets[0].data = json.bitrate;
+                window.chartBitRate.series[0].setData(json.bitrate);
 			}
+
 			if(json && json.nwid) {
 				document.getElementById("nwid").innerText = json.nwid;
 			}
@@ -199,10 +352,23 @@
 				document.getElementById("misc").innerText = json.misc;
 			}
 
-			window.signal.update();
-			window.level.update();
-			window.noise.update();
-			window.bitrate.update();
+			if(json && json.clients) {
+			    var rows = _.map(json.clients, function(r) {
+			        return "<tr><td>" + r.Mac + "</td><td>" + r.IP + "</td><td>" + r.Name + "</td></tr>";
+				}).join("\n");
+				document.getElementById("clients").innerHTML = rows;
+			}
+
+            if(json && json.cpu) {
+                window.chartCpu.series[0].setData(json.cpu);
+                var util = _.round(_.last(json.cpu), 2)
+                window.chartCpu.setSubtitle({text: util + '%'});
+            }
+            if(json && json.memory) {
+                window.chartMemory.series[0].setData(json.memory);
+                var util = _.round(_.last(json.memory), 2)
+                window.chartMemory.setSubtitle({text: util + '%'});
+            }
 		}
 		//-->
 	</script>

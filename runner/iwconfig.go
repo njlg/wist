@@ -23,6 +23,7 @@ var IWConfig Config
 func getIWConfig() string {
 	cmd := exec.Command("iwconfig", "wlan1")
 
+
 	if useFakeData {
 		cmd = exec.Command("cat", "/Users/nlevingreenhaw/go/src/wist/files/iwconfig")
 	}
@@ -40,6 +41,8 @@ func getIWConfig() string {
 		log.Error("cmd start failed", zap.Error(err))
 		return ""
 	}
+
+	defer cmd.Process.Kill()
 
 	cut.Stdin = cmdOut
 
