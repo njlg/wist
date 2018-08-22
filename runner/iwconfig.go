@@ -6,11 +6,11 @@ import (
 	"time"
 	"regexp"
 
-	"go.uber.org/zap"
-
 	"wist/log"
 	"strconv"
 	"wist/metrics"
+	"io"
+	"bytes"
 )
 
 type Config struct {
@@ -22,38 +22,26 @@ var IWConfig Config
 
 func getIWConfig() string {
 	cmd := exec.Command("iwconfig", "wlan1")
-
+	cut := exec.Command("cut", "-c", "11-")
 
 	if useFakeData {
 		cmd = exec.Command("cat", "/Users/nlevingreenhaw/go/src/wist/files/iwconfig")
 	}
 
-	cut := exec.Command("cut", "-c", "11-")
+	r, w := io.Pipe()
+	cmd.Stdout = w
+	cut.Stdin = r
 
-	cmdOut, err := cmd.StdoutPipe()
+	var output bytes.Buffer
+	cut.Stdout = &output
 
-	if err != nil {
-		log.Error("cmd StdoutPipe failed", zap.Error(err))
-		return ""
-	}
+	cmd.Start()
+	cut.Start()
+	cmd.Wait()
+	w.Close()
+	cut.Wait()
 
-	if err := cmd.Start(); err != nil {
-		log.Error("cmd start failed", zap.Error(err))
-		return ""
-	}
-
-	defer cmd.Process.Kill()
-
-	cut.Stdin = cmdOut
-
-	out, err := cut.Output()
-
-	if err != nil {
-		log.Error("cut no stdout", zap.Error(err))
-		return ""
-	}
-
-	return string(out)
+	return output.String()
 }
 
 func processIWConfig(t time.Time) {
