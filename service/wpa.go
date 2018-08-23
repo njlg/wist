@@ -19,7 +19,7 @@ func readFile() string {
 	path := "/etc/wpa_supplicant/wpa_supplicant-wlan1.conf"
 
 	if useFakeData {
-		path = "/Users/nlevingreenhaw/go/src/wist/files/etc/wpa_supplicant/wpa_supplicant-wlan1.conf"
+		path = "./files/etc/wpa_supplicant/wpa_supplicant-wlan1.conf"
 	}
 
 	out, err := ioutil.ReadFile(path)

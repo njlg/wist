@@ -25,7 +25,7 @@ func getIWConfig() string {
 	cut := exec.Command("cut", "-c", "11-")
 
 	if useFakeData {
-		cmd = exec.Command("cat", "/Users/nlevingreenhaw/go/src/wist/files/iwconfig")
+		cmd = exec.Command("cat", "./files/iwconfig")
 	}
 
 	r, w := io.Pipe()

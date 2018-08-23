@@ -16,7 +16,7 @@ func getWireless() string {
 	path := "/proc/net/wireless"
 
 	if useFakeData {
-		path = "/Users/nlevingreenhaw/go/src/wist/files/proc/net/wireless"
+		path = "./files/proc/net/wireless"
 	}
 
 	out, err := ioutil.ReadFile(path)
@@ -80,7 +80,7 @@ func getStat() string {
 	path := "/proc/stat"
 
 	if useFakeData {
-		path = "/Users/nlevingreenhaw/go/src/wist/files/proc/stat"
+		path = "./files/proc/stat"
 	}
 
 	out, err := ioutil.ReadFile(path)
@@ -127,7 +127,7 @@ func getMemInfo() string {
 	path := "/proc/meminfo"
 
 	if useFakeData {
-		path = "/Users/nlevingreenhaw/go/src/wist/files/proc/meminfo"
+		path = "./files/proc/meminfo"
 	}
 
 	out, err := ioutil.ReadFile(path)

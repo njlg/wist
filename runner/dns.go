@@ -22,7 +22,7 @@ func getDNSLease() string {
 	path := "/var/lib/misc/dnsmasq.leases"
 
 	if useFakeData {
-		path = "/Users/nlevingreenhaw/go/src/wist/files/var/lib/misc/dnsmasq.leases"
+		path = "./files/var/lib/misc/dnsmasq.leases"
 	}
 
 	out, err := ioutil.ReadFile(path)
