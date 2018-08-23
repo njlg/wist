@@ -1,0 +1,22 @@
+#!/bin/sh
+
+sha=`git rev-parse HEAD`
+version=`git describe --tags 2>/dev/null || echo 0.0.0`
+
+cat << FILE > version.go
+// Package info provides info about this app.
+package info
+
+// GetVersion returns the version of the executable.
+func GetVersion() string {
+	return "$version"
+}
+
+// GetSHA returns the git SHA that was used when the binary was built.
+func GetSHA() string {
+	return "$sha"
+}
+
+//go:generate ./generate
+FILE
+

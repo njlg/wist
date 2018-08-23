@@ -1,0 +1,22 @@
+#!/bin/sh
+
+#
+# This scirpt is used to produce a release of wist.
+# This will generate a bunch of binaries for various platforms & architectures that can be uploaded to
+# the github.com/wist releases page.
+#
+
+go generate ./...
+
+if [ -d build ]
+then
+    rm -rf build
+fi
+mkdir build
+
+GOOS=darwin GOARCH=amd64 go build -o build/wist.darwin.amd64
+GOOS=linux GOARCH=amd64 go build -o build/wist.linux.amd64
+GOOS=linux GOARCH=arm go build -o build/wist.linux.arm
+GOOS=windows GOARCH=amd64 go build -o build/wist.widnows.amd64.exe
+GOOS=windows GOARCH=386 go build -o build/wist.widnows.386.exe
+
