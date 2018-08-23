@@ -10,3 +10,5 @@ func GetVersion() string {
 func GetSHA() string {
 	return "master"
 }
+
+//go:generate ./generate
